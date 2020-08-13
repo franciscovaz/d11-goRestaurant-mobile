@@ -43,6 +43,11 @@ interface Category {
   image_url: string;
 }
 
+interface paramsProps {
+  name_like: string;
+  category_like: number;
+}
+
 const Dashboard: React.FC = () => {
   const [foods, setFoods] = useState<Food[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -51,15 +56,39 @@ const Dashboard: React.FC = () => {
   >();
   const [searchValue, setSearchValue] = useState('');
 
-  const navigation = useNavigation();
+  const { navigate } = useNavigation();
 
   async function handleNavigate(id: number): Promise<void> {
     // Navigate do ProductDetails page
+    navigate('FoodDetails', { id });
   }
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
       // Load Foods from API
+
+      const params = {} as paramsProps;
+
+      if (searchValue) {
+        params.name_like = searchValue;
+      }
+
+      if (selectedCategory) {
+        params.category_like = selectedCategory;
+      }
+
+      const response = await api.get('foods', {
+        params,
+      });
+
+      const formattedFoods = response.data.map((food: Food) => {
+        return {
+          ...food,
+          formattedPrice: formatValue(food.price),
+        };
+      });
+
+      setFoods(formattedFoods);
     }
 
     loadFoods();
@@ -68,6 +97,9 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     async function loadCategories(): Promise<void> {
       // Load categories from API
+      const resp = await api.get('categories');
+
+      setCategories(resp.data);
     }
 
     loadCategories();
@@ -75,6 +107,11 @@ const Dashboard: React.FC = () => {
 
   function handleSelectCategory(id: number): void {
     // Select / deselect category
+    if (id === selectedCategory) {
+      setSelectedCategory(undefined);
+      return;
+    }
+    setSelectedCategory(id);
   }
 
   return (
@@ -85,7 +122,7 @@ const Dashboard: React.FC = () => {
           name="log-out"
           size={24}
           color="#FFB84D"
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigate('Home')}
         />
       </Header>
       <FilterContainer>
