@@ -102,18 +102,45 @@ const FoodDetails: React.FC = () => {
 
   function handleIncrementExtra(id: number): void {
     // Increment extra quantity
+    // Find whitch extra is
+    const extraIndex = extras.findIndex(extra => extra.id === id);
+
+    const newExtras = [...extras];
+    const newQuantity = newExtras[extraIndex].quantity + 1;
+    newExtras[extraIndex] = {
+      ...newExtras[extraIndex],
+      quantity: newQuantity,
+    };
+
+    setExtras(newExtras);
   }
 
   function handleDecrementExtra(id: number): void {
     // Decrement extra quantity
+    const extraIndex = extras.findIndex(extra => extra.id === id);
+
+    const newExtras = [...extras];
+    if (newExtras[extraIndex].quantity > 1) {
+      const newQuantity = newExtras[extraIndex].quantity - 1;
+      newExtras[extraIndex] = {
+        ...newExtras[extraIndex],
+        quantity: newQuantity,
+      };
+    }
+
+    setExtras(newExtras);
   }
 
   function handleIncrementFood(): void {
     // Increment food quantity
+    setFoodQuantity(foodQuantity + 1);
   }
 
   function handleDecrementFood(): void {
     // Decrement food quantity
+    if (foodQuantity > 1) {
+      setFoodQuantity(foodQuantity - 1);
+    }
   }
 
   const toggleFavorite = useCallback(() => {
@@ -122,7 +149,15 @@ const FoodDetails: React.FC = () => {
 
   const cartTotal = useMemo(() => {
     // Calculate cartTotal
-    return 4;
+    const totalFoodQuantity = food.price * foodQuantity;
+
+    const totalInExtras = extras.reduce(
+      (prev, current) =>
+        current.quantity === 0 ? prev : prev + current.value * current.quantity,
+      0,
+    );
+
+    return formatValue(totalFoodQuantity + totalInExtras);
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
